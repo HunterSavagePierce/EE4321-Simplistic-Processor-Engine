@@ -12,7 +12,15 @@
 // - ChatGPT 4o
 ///////////////////////////////////////////////////////////////////////////////
 
-module Execution(
-
-    );
+module Execution(Clk, Databus, address, nRead, nWrite, nReset);
+    input logic nRead,nWrite, nReset, Clk;
+    input logic [15:0] address;
+    inout logic [255:0] Databus;
+    
+    logic [255:0] Databus_driver; // Internal driver for Databus
+    logic drive_enable;
+  
+    // Tri-state control for the Databus
+    assign Databus = drive_enable ? Databus_driver : 'z;
+    
 endmodule
