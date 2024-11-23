@@ -60,20 +60,19 @@ parameter Instruct5 = 32'h 07_11_03_10;//ScaleImm the result in step 3 by the re
 parameter Instruct6 = 32'h 00_05_04_03; //Multiply the result from step 4 by the result in step 3, store in memory. 4x4 * 4x4
 parameter Instruct7 = 32'h 01_06_04_03; //Multiply the result from step 6 by the result in step 5, store in memory. 4x2 * 2x4
 parameter Instruct8 = 32'h 02_07_04_03; //Multiply the result from step 5 by the result in step 4, store in memory. 2x4 * 4x2
-
 parameter Instruct9 = 32'h 12_0a_01_00;//Multiply the integer value in memory location 0 to location 1. Store it in memory location 0x0A
 parameter Instruct10 = 32'h 11_12_0a_01;//Subtract the integer value in memory location 01 from memory location 0x0A and store it in a register
 parameter Instruct11 = 32'h 13_0b_0a_12;//Divide Memory location 0x0A by the register in step 8 and store it in location 0x0B
 parameter Instruct12 = 32'h FF_00_00_00; // stop
 
 
-module InstructionMemory(Clk,Dataout, address, nRead,nReset);
+module InstructionMemory(Clk, Databus, address, nRead,nReset);
 // NOTE the lack of datain and write. This is because this is a ROM model
 
 input logic nRead, nReset, Clk;
 input logic [15:0] address;
 
-output logic [31:0] Dataout; // 1 - 32 it instructions at a time.
+output logic [31:0] Databus; // 1 - 32 it instructions at a time.
 
   logic [31:0]InstructMemory[12]; // this is the physical memory
 
@@ -82,12 +81,12 @@ output logic [31:0] Dataout; // 1 - 32 it instructions at a time.
   always_ff @(negedge Clk or negedge nReset)
 begin
   if (!nReset)
-    Dataout = 0;
+    Databus = 0;
   else begin
   if(address[15:12] == InstrMemEn) // talking to Instruction IntstrMemEn
 		begin
 			if(~nRead)begin
-				Dataout <= InstructMemory[address[11:0]]; // data will reamin on dataout until it is changed.
+				Databus <= InstructMemory[address[11:0]]; // data will reamin on dataout until it is changed.
 			end
 		end
 	end

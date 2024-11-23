@@ -14,27 +14,23 @@
 
 module top ();
 
-logic [255:0] InstructDataOut;
-logic [255:0] MemDataOut;
-logic [255:0] ExeDataOut;
-logic [255:0] IntDataOut;
-logic [255:0] MatrixDataOut;
+logic [255:0] Databus;
 logic nRead,nWrite,nReset,Clk;
 logic [15:0] address;
 
 logic Fail;
 
-InstructionMemory  U1(Clk,InstructDataOut, address, nRead,nReset);
+InstructionMemory  U1(Clk, Databus, address, nRead, nReset);
 
-MainMemory  U2(Clk,MemDataOut,ExeDataOut, address, nRead,nWrite, nReset);
+MainMemory  U2(Clk, Databus, address, nRead, nWrite, nReset);
 
-Execution  U3(Clk,InstructDataOut,MemDataOut,MatrixDataOut,IntDataOut,ExeDataOut, address, nRead,nWrite, nReset);
+Execution  U3(Clk, Databus, address, nRead, nWrite, nReset);
 
-MatrixAlu  U4(Clk,MatrixDataOut,ExeDataOut, address, nRead,nWrite, nReset);
+MatrixAlu  U4(Clk, Databus, address, nRead, nWrite, nReset);
 
-IntegerAlu  U5(Clk,IntDataOut,ExeDataOut, address, nRead,nWrite, nReset);
+IntegerAlu  U5(Clk, Databus, address, nRead, nWrite, nReset);
 
-TestMatrix  UTest(Clk,nReset);
+TestMatrix  UTest(Clk, nReset);
 
   initial begin //. setup to allow waveforms for edaplayground
    $dumpfile("dump.vcd");
