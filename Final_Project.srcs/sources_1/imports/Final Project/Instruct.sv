@@ -68,50 +68,52 @@ parameter Instruct12 = 32'h FF_00_00_00; // stop
 
 module InstructionMemory(Clk, Databus, address, nRead,nReset);
 // NOTE the lack of datain and write. This is because this is a ROM model
+    
+    input logic nRead, nReset, Clk;
+    input logic [15:0] address;
+    
+    output logic [31:0] Databus; // 1 - 32 it instructions at a time.
 
-input logic nRead, nReset, Clk;
-input logic [15:0] address;
+    logic [31:0]InstructMemory[12]; // this is the physical memory
+    
+    logic [255:0] Databus_driver; // Internal driver for Databus
+    logic drive_enable;
 
-output logic [31:0] Databus; // 1 - 32 it instructions at a time.
+    // This memory is designed to be driven into a data multiplexor. 
+    
+    assign Databus = drive_enable ? Databus_driver : 'z;
 
-  logic [31:0]InstructMemory[12]; // this is the physical memory
+    always_ff @(negedge Clk or negedge nReset) begin
+        if (!nReset) begin
+            Databus_driver = 0;
+            drive_enable <= 0;
+        end else begin
+            if (address[15:12] == InstrMemEn) begin // talking to Instruction IntstrMemEn
+                if (~nRead) begin
+                    drive_enable <= 1;
+                    Databus_driver <= InstructMemory[address[11:0]]; // data will reamin on dataout until it is changed.
+                end
+            end else begin
+                drive_enable <= 0;
+            end
+        end
+    end // from negedge nRead	
 
-// This memory is designed to be driven into a data multiplexor. 
-
-  always_ff @(negedge Clk or negedge nReset)
-begin
-  if (!nReset)
-    Databus = 0;
-  else begin
-  if(address[15:12] == InstrMemEn) // talking to Instruction IntstrMemEn
-		begin
-			if(~nRead)begin
-				Databus <= InstructMemory[address[11:0]]; // data will reamin on dataout until it is changed.
-			end
-		end
-	end
-end // from negedge nRead	
-
-always @(negedge nReset)
-begin
-//	set in the default instructions 
-//
-	InstructMemory[0] = Instruct1;  	
-	InstructMemory[1] = Instruct2;  	
-  	InstructMemory[2] = Instruct3;
-	InstructMemory[3] = Instruct4;	
-	InstructMemory[4] = Instruct5;
-	InstructMemory[5] = Instruct6;
-	InstructMemory[6] = Instruct7;
-	InstructMemory[7] = Instruct8;
-	InstructMemory[8] = Instruct9;
-	InstructMemory[9] = Instruct10;
-	InstructMemory[10] = Instruct11;
-	InstructMemory[11] = Instruct12;
-	
-
-	
-end 
+    always @(negedge nReset) begin
+        //	set in the default instructions 
+        InstructMemory[0] = Instruct1;  	
+        InstructMemory[1] = Instruct2;  	
+        InstructMemory[2] = Instruct3;
+        InstructMemory[3] = Instruct4;	
+        InstructMemory[4] = Instruct5;
+        InstructMemory[5] = Instruct6;
+        InstructMemory[6] = Instruct7;
+        InstructMemory[7] = Instruct8;
+        InstructMemory[8] = Instruct9;
+        InstructMemory[9] = Instruct10;
+        InstructMemory[10] = Instruct11;
+        InstructMemory[11] = Instruct12;
+    end 
 
 endmodule
 

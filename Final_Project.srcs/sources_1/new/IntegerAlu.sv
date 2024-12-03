@@ -23,4 +23,17 @@ module IntegerAlu(Clk, Databus, address, nRead, nWrite, nReset);
     // Tri-state control for the Databus
     assign Databus = drive_enable ? Databus_driver : 'z;
     
+    always_ff @(negedge Clk) begin
+        if(address[15:12] == IntAlu) begin // talking to Instruction IntstrMemEn
+            if (~nRead) begin
+                drive_enable <= 1; ; // Drive data onto Databus
+            end
+            if (~nWrite) begin
+                Databus_driver <= Databus;
+            end 
+        end else begin
+            drive_enable <= 0;
+        end
+    end
+    
 endmodule

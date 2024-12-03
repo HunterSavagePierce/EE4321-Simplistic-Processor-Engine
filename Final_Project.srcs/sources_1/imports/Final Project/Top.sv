@@ -14,7 +14,7 @@
 
 module top ();
     
-    logic [255:0] Databus;
+    wire [255:0] Databus;
     logic nRead,nWrite,nReset,Clk;
     logic [15:0] address;
     

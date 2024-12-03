@@ -24,9 +24,11 @@ module MainMemory(Clk, Databus, address, nRead,nWrite, nReset);
   
     // Tri-state control for the Databus
     assign Databus = drive_enable ? Databus_driver : 'z;
-
+    
     always_ff @(negedge Clk or negedge nReset) begin
         if (~nReset) begin
+            drive_enable = 0;
+            Databus_driver = 0;
             MainMemory[0] = 256'h0008_000c_0008_0006_000c_0010_000d_0009_000a_0009_0005_000d_000c_0003_000a_0006;
             MainMemory[1] = 256'h0003_0004_0007_0008_0007_0008_000e_0007_0010_0009_000c_000b_000c_0005_0005_0006;
             MainMemory[2] = 256'h0;
@@ -41,25 +43,21 @@ module MainMemory(Clk, Databus, address, nRead,nWrite, nReset);
             MainMemory[11] = 256'hb;
             MainMemory[12] = 256'h0;
             MainMemory[13] = 256'h0;
-            
-            drive_enable = 0;
-            Databus_driver = 0;
-        end
-
-        else if(address[15:12] == MainMemEn) // talking to Instruction
-        begin
+        end else if (address[15:12] == MainMemEn) begin
             if (~nRead) begin
-                drive_enable = 1;                          // Enable driving Databus
-                Databus_driver = MainMemory[address[11:0]]; // Drive data onto Databus
+                drive_enable = 1;
+                Databus_driver = MainMemory[address[11:0]];
             end else begin
-                drive_enable = 0; // Disable driving Databus
+                drive_enable = 0;
             end
-            
-            if(~nWrite)begin
-                MainMemory[address[11:0]] <= Databus_driver;
+    
+            if (~nWrite) begin
+                MainMemory[address[11:0]] <= Databus; // Use `Databus` for input
             end
+        end else begin
+            drive_enable = 0; // Ensure bus is not driven when not active
         end
-    end // from negedge nRead	
+    end	
 endmodule
 
 
