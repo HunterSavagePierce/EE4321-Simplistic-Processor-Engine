@@ -139,6 +139,15 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
                     nWrite = 1;
                     src1Data = Databus; // Data fetched from the databus
                 end
+                if (opcode == MScaleImm) begin
+                    if (!opcode[4]) begin
+                    next_state = EXECUTE_MATRIX;
+                    end else begin
+                        next_state = EXECUTE_ALU;
+                    end
+                end else begin
+                    next_state = FETCH_SRC2;
+                end
             end
             FETCH_SRC2: begin
                 if (src2[7]) begin
