@@ -58,7 +58,6 @@ module MatrixAlu(Clk, Databus, address, nRead, nWrite, nReset);
     end
     
     always_ff @(posedge Clk) begin
-    
         if (address[3:0] == ALU_Source1) begin
             SRC1_MATRIX[0][0] <= Databus_driver[15:0];
             SRC1_MATRIX[0][1] <= Databus_driver[31:16];
@@ -103,44 +102,184 @@ module MatrixAlu(Clk, Databus, address, nRead, nWrite, nReset);
         end
         else if (address[3:0] == ALU_Result) begin    
             //Only used for immediate
-            case (address[11:4])
+            case (address[11:8])
                 MMult1: begin
                     // 4x4 Matrix Multiplication using nested for loops
-                    integer i, j, k; // Loop counters
-                    for (i = 0; i < 4; i = i + 1) begin
-                        for (j = 0; j < 4; j = j + 1) begin
-                            for (k = 0; k < 4; k = k + 1) begin
-                                RESULT_MATRIX[i][j] = RESULT_MATRIX[i][j] + 
-                                                      (SRC1_MATRIX[i][k] * SRC2_MATRIX[k][j]);
-                            end
-                        end
-                    end     
+                    RESULT_MATRIX[0][0] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[0][1] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[0][2] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][2] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][2] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][2];
+                                           
+                    RESULT_MATRIX[0][3] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][3] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][3] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][3];
+                                           
+                    RESULT_MATRIX[1][0] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[1][1] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[1][2] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][2] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][2] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][2];
+                                           
+                    RESULT_MATRIX[1][3] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][3] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][3] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][3];
+                                           
+                    RESULT_MATRIX[2][0] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[2][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[2][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[2][1] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[2][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[2][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[2][2] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][2] +
+                                           SRC1_MATRIX[2][2] * SRC2_MATRIX[2][2] +
+                                           SRC1_MATRIX[2][3] * SRC2_MATRIX[3][2];
+                                           
+                    RESULT_MATRIX[2][3] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][3] +
+                                           SRC1_MATRIX[2][2] * SRC2_MATRIX[2][3] +
+                                           SRC1_MATRIX[2][3] * SRC2_MATRIX[3][3];
+                                           
+                    RESULT_MATRIX[3][0] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[3][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[3][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[3][1] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[3][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[3][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[3][2] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][2] +
+                                           SRC1_MATRIX[3][2] * SRC2_MATRIX[2][2] +
+                                           SRC1_MATRIX[3][3] * SRC2_MATRIX[3][2];
+                                           
+                    RESULT_MATRIX[3][3] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][3] +
+                                           SRC1_MATRIX[3][2] * SRC2_MATRIX[2][3] +
+                                           SRC1_MATRIX[3][3] * SRC2_MATRIX[3][3];
                 end
                 MMult2: begin
                     // 4x2 * 2x4 matrix multiplication
-                    integer i, j, k; // Loop counters
-                    for (i = 0; i < 4; i = i + 1) begin
-                        for (j = 0; j < 4; j = j + 1) begin
-                            RESULT_MATRIX[i][j] = 0; // Initialize the result element to zero
-                            for (k = 0; k < 2; k = k + 1) begin
-                                RESULT_MATRIX[i][j] = RESULT_MATRIX[i][j] + 
-                                                      (SRC1_MATRIX[i][k] * SRC2_MATRIX[k][j]);
-                            end
-                        end
-                    end 
+                    RESULT_MATRIX[0][0] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][0];
+                                           
+                    RESULT_MATRIX[0][1] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][1];
+                                           
+                    RESULT_MATRIX[0][2] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][2];
+                                           
+                    RESULT_MATRIX[0][3] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][3];
+                                           
+                    RESULT_MATRIX[1][0] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][0];
+                                           
+                    RESULT_MATRIX[1][1] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][1];
+                                           
+                    RESULT_MATRIX[1][2] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][2];
+                                           
+                    RESULT_MATRIX[1][3] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][3];
+                                           
+                    RESULT_MATRIX[2][0] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][0];
+                                           
+                    RESULT_MATRIX[2][1] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][1];
+                                           
+                    RESULT_MATRIX[2][2] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][2];
+                                           
+                    RESULT_MATRIX[2][3] <= SRC1_MATRIX[2][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[2][1] * SRC2_MATRIX[1][3];
+                                           
+                    RESULT_MATRIX[3][0] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][0];
+                                           
+                    RESULT_MATRIX[3][1] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][1];
+                                           
+                    RESULT_MATRIX[3][2] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][2] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][2];
+                                           
+                    RESULT_MATRIX[3][3] <= SRC1_MATRIX[3][0] * SRC2_MATRIX[0][3] +
+                                           SRC1_MATRIX[3][1] * SRC2_MATRIX[1][3];
                 end
                 MMult3: begin
                     // 2x4 * 4x2 matrix multiplication
-                    integer i, j, k; // Loop counters
-                    for (i = 0; i < 2; i = i + 1) begin
-                        for (j = 0; j < 2; j = j + 1) begin
-                            RESULT_MATRIX[i][j] = 0; // Initialize the result element to zero
-                            for (k = 0; k < 4; k = k + 1) begin
-                                RESULT_MATRIX[i][j] = RESULT_MATRIX[i][j] + 
-                                                      (SRC1_MATRIX[i][k] * SRC2_MATRIX[k][j]);
-                            end
-                        end
-                    end
+                    RESULT_MATRIX[0][0] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[0][1] <= SRC1_MATRIX[0][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[0][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[0][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[0][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[0][2] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][0] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][0] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][0] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][0];
+                                           
+                    RESULT_MATRIX[0][3] <= SRC1_MATRIX[1][0] * SRC2_MATRIX[0][1] +
+                                           SRC1_MATRIX[1][1] * SRC2_MATRIX[1][1] +
+                                           SRC1_MATRIX[1][2] * SRC2_MATRIX[2][1] +
+                                           SRC1_MATRIX[1][3] * SRC2_MATRIX[3][1];
+                                           
+                    RESULT_MATRIX[1][0] <= 0;
+                    
+                    RESULT_MATRIX[1][1] <= 0;
+                                           
+                    RESULT_MATRIX[1][2] <= 0;
+                                           
+                    RESULT_MATRIX[1][3] <= 0;
+                                           
+                    RESULT_MATRIX[2][0] <= 0;
+                                           
+                    RESULT_MATRIX[2][1] <= 0;
+                                           
+                    RESULT_MATRIX[2][2] <= 0;
+                                           
+                    RESULT_MATRIX[2][3] <= 0;
+                                           
+                    RESULT_MATRIX[3][0] <= 0;
+                                           
+                    RESULT_MATRIX[3][1] <= 0;
+                                           
+                    RESULT_MATRIX[3][2] <= 0;
+                                           
+                    RESULT_MATRIX[3][3] <= 0;
                 end
                 Madd: begin
                     integer i, j; // Loop counters
@@ -178,7 +317,7 @@ module MatrixAlu(Clk, Databus, address, nRead, nWrite, nReset);
                     integer i, j; // Loop counters
                     for (i = 0; i < 4; i = i + 1) begin
                         for (j = 0; j < 4; j = j + 1) begin
-                            RESULT_MATRIX[i][j] = RESULT_MATRIX[i][j] * SRC1_MATRIX[i][j];
+                            RESULT_MATRIX[i][j] = address[7:4] * SRC1_MATRIX[i][j];
                         end
                     end
                 end

@@ -93,7 +93,7 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
     assign Databus = drive_enable ? Databus_driver : 'z;
     
     typedef enum logic [4:0] {
-        RESET, FETCH_INSTRUCTION, DECODE_INSTRUCTION, 
+        RESET, FETCH_INSTRUCTION, DECODE_INSTRUCTION, MATRIX_SCALEIMM_FETCH, MATRIX_SCALEIMM_RET,
         MATRIX_FETCH_SRC1, MATRIX_RET_SRC1, MATRIX_FETCH_RESULT, MATRIX_RETRIEVE,
         MATRIX_FETCH_SRC2, MATRIX_RET_SRC2, MATRIX_EXECUTE, MATRIX_DONE, 
         INT_FETCH_SRC1, INT_RET_SRC1, INT_RETRIEVE,
@@ -162,7 +162,7 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
                 nWrite = 0;
                 
                 if (opcode == MScaleImm) begin
-                    next_state = MATRIX_FETCH_SRC2; //###CHANGE THIS LATER###
+                    next_state = MATRIX_EXECUTE; //###CHANGE THIS LATER###
                 end
                 else
                     next_state = MATRIX_FETCH_SRC2;
@@ -196,7 +196,8 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
                 nRead = 1;
                 nWrite = 1;
                 address[3:0] = ALU_Result;
-                address[11:4] = opcode;
+                address[11:8] = opcode;
+                address[7:4] = src2;
                 
                 next_state = MATRIX_DONE;
             end
