@@ -44,7 +44,7 @@ parameter Overflow_err = 5;
 //IntSub::11h::Reg/mem::Reg/mem::Reg/mem
 //IntMult::12h::Reg/mem::Reg/mem::Reg/mem
 //IntDiv::13h::Reg/mem::Reg/mem::Reg/mem
-
+parameter Stop = 8'h FF;
 parameter MMult1 = 8'h 00;
 parameter MMult2 = 8'h 01;
 parameter MMult3 = 8'h 02;
@@ -92,9 +92,13 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
     // Tri-state control for the Databus
     assign Databus = drive_enable ? Databus_driver : 'z;
     
-    typedef enum logic [3:0] {
-        RESET, FETCH_INSTRUCTION, DECODE_INSTRUCTION, FETCH_SRC1, 
-        FETCH_SRC2, FETCH_DEST, EXECUTE_ALU, EXECUTE_MATRIX, WRITE_BACK
+    typedef enum logic [4:0] {
+        RESET, FETCH_INSTRUCTION, DECODE_INSTRUCTION, 
+        MATRIX_FETCH_SRC1, MATRIX_RET_SRC1, MATRIX_FETCH_RESULT, MATRIX_RETRIEVE,
+        MATRIX_FETCH_SRC2, MATRIX_RET_SRC2, MATRIX_EXECUTE, MATRIX_DONE, 
+        INT_FETCH_SRC1, INT_RET_SRC1, INT_RETRIEVE,
+        INT_FETCH_SRC2, INT_RET_SRC2, INT_EXECUTE, INT_DONE, 
+        NEXT_UP
     } state_t;
 
     state_t state, next_state;
@@ -116,7 +120,6 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
                 nWrite = 1;
             end
             DECODE_INSTRUCTION: begin
-                next_state = FETCH_SRC1;
                 address[15:12] = ExecuteEn;
                 address[11:0] = 0;
                 nRead = 1;
@@ -126,52 +129,187 @@ module Execution(Clk, Databus, address, nRead, nWrite, nReset);
                 dest = Databus_driver[23:16];
                 src1 = Databus_driver[15:8];
                 src2 = Databus_driver[7:0];
-            end
-            FETCH_SRC1: begin
-                if (src1[7]) begin
-                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
-                    src1Data = InternalReg[src1[3:0]];
+                if (opcode == Stop) begin
+                    $stop;
+                end
+                if (opcode[7:4] == 0) begin
+                    next_state = MATRIX_FETCH_SRC1;
                 end else begin
-                    // Fetch from MainMemory (address indicated by src1)
+                    next_state = INT_FETCH_SRC1;
+                end
+                
+            end
+            MATRIX_FETCH_SRC1: begin
+                if (src1[7:4]) begin
+                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
+                    address[15:12] = ExecuteEn;
+                    nRead = 0;
+                    nWrite = 1;
+                    Databus_driver = InternalReg[src1[3:0]];
+                end else begin
+                    // Fetch from MainMemory (address indicated by src2)
                     address[15:12] = MainMemEn;
                     address[11:0] = src1[7:0];
                     nRead = 0;
                     nWrite = 1;
-                    src1Data = Databus; // Data fetched from the databus
                 end
-                if (opcode == MScaleImm) begin
-                    if (!opcode[4]) begin
-                    next_state = EXECUTE_MATRIX;
-                    end else begin
-                        next_state = EXECUTE_ALU;
-                    end
-                end else begin
-                    next_state = FETCH_SRC2;
-                end
+                next_state = MATRIX_RET_SRC1;
             end
-            FETCH_SRC2: begin
-                if (src2[7]) begin
+            MATRIX_RET_SRC1: begin
+                address[15:12] = AluEn;
+                address[3:0] = ALU_Source1;
+                nRead = 1;
+                nWrite = 0;
+                
+                if (opcode == MScaleImm) begin
+                    next_state = MATRIX_FETCH_SRC2; //###CHANGE THIS LATER###
+                end
+                else
+                    next_state = MATRIX_FETCH_SRC2;
+            end
+            MATRIX_FETCH_SRC2: begin
+                if (src2[7:4]) begin
                     // Fetch from InternalReg (register indicated by lower 3 bits of src1)
-                    src2Data = InternalReg[src2[3:0]];
+                    address[15:12] = ExecuteEn;
+                    nRead = 0;
+                    nWrite = 1;
+                    Databus_driver = InternalReg[src2[3:0]];
                 end else begin
                     // Fetch from MainMemory (address indicated by src2)
                     address[15:12] = MainMemEn;
                     address[11:0] = src2[7:0];
                     nRead = 0;
                     nWrite = 1;
-                    src2Data = Databus; // Data fetched from the databus
                 end
-                if (!opcode[4]) begin
-                    next_state = EXECUTE_MATRIX;
-                end else begin
-                    next_state = EXECUTE_ALU;
-                end
+                next_state = MATRIX_RET_SRC2;
             end
-            //FETCH_DEST: If opcode is ALU then next_state = EXECUTE_MATRIX
-            // Else its matrix then next_state = EXECUTE_ALU
-            //EXECUTE_MATRIX:
-            //EXECTUE_ALU: 
-            //WRITE_BACK: next_state = FETCH;
+            MATRIX_RET_SRC2: begin
+                address[15:12] = AluEn;
+                address[11:4] = opcode;
+                address[3:0] = ALU_Source2;
+                nRead = 1;
+                nWrite = 0;
+                
+                next_state = MATRIX_EXECUTE;
+            end
+            MATRIX_EXECUTE: begin
+                nRead = 1;
+                nWrite = 1;
+                address[3:0] = ALU_Result;
+                address[11:4] = opcode;
+                
+                next_state = MATRIX_DONE;
+            end
+            MATRIX_DONE: begin
+                address[15:12] = AluEn;
+                address[3:0] = AluStatusOut;
+                nRead = 0;
+                nWrite = 1;
+                next_state = MATRIX_RETRIEVE;
+            end
+            MATRIX_RETRIEVE: begin
+                if (dest[7:4]) begin
+                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
+                    address[15:12] = ExecuteEn;
+                    nRead = 1;
+                    nWrite = 0;
+                    InternalReg[dest[3:0]] = Databus_driver;
+                end else begin
+                    // Fetch from MainMemory (address indicated by src2)
+                    address[15:12] = MainMemEn;
+                    address[11:0] = dest[3:0];
+                    nRead = 1;
+                    nWrite = 0;
+                end
+                next_state = NEXT_UP;
+            end
+            INT_FETCH_SRC1: begin
+                if (src1[7:4]) begin
+                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
+                    address[15:12] = ExecuteEn;
+                    nRead = 0;
+                    nWrite = 1;
+                    Databus_driver = InternalReg[src1[3:0]];
+                end else begin
+                    // Fetch from MainMemory (address indicated by src2)
+                    address[15:12] = MainMemEn;
+                    address[11:0] = src1[7:0];
+                    nRead = 0;
+                    nWrite = 1;
+                end
+                next_state = INT_RET_SRC1;
+            end
+            INT_RET_SRC1: begin
+                address[15:12] = IntAlu;
+                address[3:0] = ALU_Source1;
+                nRead = 1;
+                nWrite = 0;
+                
+                next_state = INT_FETCH_SRC2;
+            end
+            INT_FETCH_SRC2: begin
+                if (src2[7:4]) begin
+                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
+                    address[15:12] = ExecuteEn;
+                    nRead = 0;
+                    nWrite = 1;
+                    Databus_driver = InternalReg[src2[3:0]];
+                end else begin
+                    // Fetch from MainMemory (address indicated by src2)
+                    address[15:12] = MainMemEn;
+                    address[11:0] = src2[7:0];
+                    nRead = 0;
+                    nWrite = 1;
+                end
+                next_state = INT_RET_SRC2;
+            end
+            INT_RET_SRC2: begin
+                address[15:12] = IntAlu;
+                address[11:4] = opcode;
+                address[3:0] = ALU_Source2;
+                nRead = 1;
+                nWrite = 0;
+                
+                next_state = INT_EXECUTE;
+            end
+            INT_EXECUTE: begin
+                nRead = 1;
+                nWrite = 1;
+                address[11:4] = opcode;
+                address[3:0] = ALU_Result;
+                
+                next_state = INT_DONE;
+            end
+            INT_DONE: begin
+                address[15:12] = IntAlu;
+                address[3:0] = AluStatusOut;
+                nRead = 0;
+                nWrite = 1;
+                next_state = INT_RETRIEVE;
+            end
+            INT_RETRIEVE: begin
+                if (dest[7:4]) begin
+                    // Fetch from InternalReg (register indicated by lower 3 bits of src1)
+                    address[15:12] = ExecuteEn;
+                    nRead = 1;
+                    nWrite = 0;
+                    InternalReg[dest[3:0]] = Databus_driver;
+                end else begin
+                    // Fetch from MainMemory (address indicated by src2)
+                    address[15:12] = MainMemEn;
+                    address[11:0] = dest[3:0];
+                    nRead = 1;
+                    nWrite = 0;
+                end
+                next_state = NEXT_UP;
+            end
+            NEXT_UP: begin
+                nRead = 1;
+                nWrite = 1;
+                address = 0;
+                ProgCount += 1;
+                next_state = FETCH_INSTRUCTION;
+            end
             default: next_state = RESET;
         endcase
     end
